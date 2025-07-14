@@ -68,6 +68,13 @@ app.use('/graphql', createHandler({
          data
       }
    },
+   context: (req) => {      
+      return {
+         req,
+         isAuth: req.raw.isAuth,
+         userId: req.raw.userId
+      }
+   }
 }));
 
 app.use((error, req, res, next) => {
