@@ -4,6 +4,8 @@ import { hash, compare } from 'bcryptjs';
 import User from '../models/user-model.js';
 import Post from '../models/post-model.js';
 
+const POSTS_PER_PAGE = 2;
+
 export default { 
    createUser: async function ({ userInput }) {
       const { email } = userInput;
@@ -137,18 +139,23 @@ export default {
    },
 
    showPosts: async function(args, context) {
+      const { req } = context;
+      console.log(req);
+      
       const { isAuth } = context;
-
       if (!isAuth) {
          const err = new Error('Not Authenticated');
          err.status = 401;
          throw err;
       }
       
+      const page = req.raw.query.page;
       const totalPosts = await Post.find().countDocuments();
       const posts = await Post.find()
          .sort({createdAt: -1})
-         .populate('creator');
+         .populate('creator')
+         .skip((page - 1) * POSTS_PER_PAGE)
+         .limit(POSTS_PER_PAGE);
       
       return {
          posts: posts.map(p => {
