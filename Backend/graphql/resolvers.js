@@ -1,5 +1,7 @@
 import validator from 'validator';
-import { hash } from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import { hash, compare } from 'bcryptjs';
 import User from '../models/user-model.js';
 
 export default { 
@@ -26,7 +28,9 @@ export default {
 
       const user = await User.findOne({email});
       if(user) {
-         throw new Error('User already exists');
+         const error = new Error('Email already exist');
+         error.code = 409;
+         throw error;
       }
 
       const hashedPassword = await hash(password, 12);
@@ -40,6 +44,38 @@ export default {
       return {
          ...createdUser._doc,
          _id: createdUser._id.toString()
+      }
+   },
+
+   login: async function({email, password}) {
+      const user = await User.findOne({email});
+      if(!user) {
+         const error = new Error('User not found');
+         error.code = 401;
+         throw error;
+      }
+
+      const isMatch = await compare(password, user.password);
+      if(!isMatch) {
+         const error = new Error('Incorrect password');
+         error.code = 401;
+         throw error;
+      }
+
+      const token = jwt.sign(
+         {
+            userId: user._id.toString(),
+            email: user.email
+         },
+         process.env.JWT_SECRET,
+         {
+            expiresIn: '1h'
+         }
+      );
+      
+      return {
+         token,
+         userId: user._id.toString()
       }
    }
 }
