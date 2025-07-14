@@ -7,13 +7,13 @@ export default {
       const { email } = userInput;
       const { name } = userInput;
       const { password } = userInput;
-
+      
       const errors = [];
       if(!validator.isEmail(email)) {
          errors.push({message: 'Invalid email'});
       }
       
-      if(validator.isEmpty(password) || !validator.isLength(password, {min: 8})) {
+      if(validator.isEmpty(password) || !validator.isLength(password, {min: 3})) {
          errors.push({ message: 'Invalid password'});
       }
 
