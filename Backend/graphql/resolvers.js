@@ -8,18 +8,25 @@ export default {
       const { name } = userInput;
       const { password } = userInput;
 
+      const errors = [];
       if(!validator.isEmail(email)) {
-         throw new Error('Invalid email');
+         errors.push({message: 'Invalid email'});
       }
       
       if(validator.isEmpty(password) || !validator.isLength(password, {min: 8})) {
-         throw new Error('Invalid password');
+         errors.push({ message: 'Invalid password'});
+      }
+
+      if(errors.length > 0) {
+         const error = new Error('Invalid input.');
+         error.data = errors;
+         error.code = 422;
+         throw error;
       }
 
       const user = await User.findOne({email});
       if(user) {
-         const err = new Error('User already exists');
-         throw err;
+         throw new Error('User already exists');
       }
 
       const hashedPassword = await hash(password, 12);
