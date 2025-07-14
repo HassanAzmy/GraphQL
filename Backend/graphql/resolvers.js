@@ -169,8 +169,7 @@ export default {
    },
 
    showSinglePost: async function ({ postId }, context) {
-      const { isAuth } = context;
-      
+      const { isAuth } = context;      
       if (!isAuth) {
          const err = new Error('Not Authenticated');
          err.status = 401;
@@ -191,4 +190,62 @@ export default {
          updatedAt: post.updatedAt.toString(),
       }
    },
+
+   updatePost: async function ({ postInput, postId }, context) {
+      const { userId } = context;
+      const { isAuth } = context;
+      if (!isAuth) {
+         const err = new Error('Not Authenticated');
+         err.status = 401;
+         throw err;
+      }
+
+      const { title } = postInput;
+      const { content } = postInput;
+      const { imageUrl } = postInput;
+
+      const errors = [];
+      if (validator.isEmpty(title) || !validator.isLength(title, { min: 3 })) {
+         errors.push({ message: 'Invalid title' });
+      }
+
+      if (validator.isEmpty(content) || !validator.isLength(content, { min: 5 })) {
+         errors.push({ message: 'Invalid title' });
+      }
+
+      if (errors.length > 0) {
+         const error = new Error('Invalid input.');
+         error.data = errors;
+         error.code = 422;
+         throw error;
+      }
+
+      const post = await Post.findById(postId).populate('creator');
+      if(!post) {
+         const err = new Error('No post found');
+         err.status = 404;
+         throw err;
+      }
+      
+      if (post.creator._id.toString() !== userId.toString()) {
+         const err = new Error('Not Authorized');
+         err.status = 403;
+         throw err;
+      }
+
+      post.title = title;
+      post.content = content;
+      post.imageUrl = imageUrl;
+      
+      const updatedPost = await post.save();
+      
+      const user = await User.findById(userId);
+      return {
+         ...updatedPost._doc,
+         creator: user,
+         _id: updatedPost._id.toString(),
+         createdAt: updatedPost.createdAt.toISOString(),
+         updatedAt: updatedPost.updatedAt.toISOString(),
+      }
+   }
 }

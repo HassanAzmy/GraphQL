@@ -51,5 +51,6 @@ export default buildSchema(`
       createUser(userInput: UserInputData!): User!
       login(email: String!, password: String!): AuthData!
       createPost(postInput: PostInputData!): Post!
+      updatePost(postInput: PostInputData!, postId: ID!): Post!
    }
 `);

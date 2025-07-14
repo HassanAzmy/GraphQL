@@ -176,7 +176,8 @@ class Feed extends Component {
     })
     .then(res => res.json())
     .then(resData => {
-      const imageUrl = resData.imagePath;
+      const imageUrl = resData.imagePath || this.state.editPost.imagePath;
+      
       let graphqlQuery = {
         query: `
           mutation CreatePost($postInput: PostInputData!) {
@@ -200,6 +201,35 @@ class Feed extends Component {
           }
         }
       };    
+
+      if(this.state.editPost) {        
+        const postId = this.state.editPost._id.toString();
+        
+        graphqlQuery = {
+          query: `
+            mutation UpdatePost($postInput: PostInputData!, $postId: ID!) {
+              updatePost(postInput: $postInput, postId: $postId) {
+                _id
+                title
+                content
+                imageUrl
+                creator {
+                  name
+                }
+                createdAt
+              }
+            }
+          `,
+          variables: {
+            postInput: {
+              title: postData.title,
+              content: postData.content,
+              imageUrl
+            },
+            postId
+          }
+        };
+      }
        
       return fetch('http://localhost:8080/graphql', {
         method: 'POST',
@@ -229,12 +259,17 @@ class Feed extends Component {
       }
       console.log(resData);   
       
+      let mutation = 'createPost';
+      if(this.state.editPost) {
+        mutation = 'updatePost';
+      }
       const post = {
-        _id: resData.data.createPost._id,
-        title: resData.data.createPost.title,
-        content: resData.data.createPost.content,
-        creator: resData.data.createPost.creator,
-        createdAt: resData.data.createPost.createdAt,
+        _id: resData.data[mutation]._id,
+        title: resData.data[mutation].title,
+        content: resData.data[mutation].content,
+        creator: resData.data[mutation].creator,
+        createdAt: resData.data[mutation].createdAt,
+        imagePath: resData.data[mutation].imageUrl,
       }
 
       this.setState(prevState => {

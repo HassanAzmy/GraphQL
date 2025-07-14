@@ -58,7 +58,7 @@ app.use(auth);
 
 app.put('/post-image', (req, res, next) => {      
    if(!req.isAuth) {
-      throw new Error('Not authenticated!');
+      return res.status(401).json({ message: 'Not authenticated.' });
    }
    
    if(!req.file) {
@@ -116,7 +116,7 @@ await mongoose.connect(MONGODB_URI);
 app.listen(PORT);
 
 function clearImage(filePath) {
-   const __dirname = import.meta.dirname;
-   filePath = path.join(__dirname, '..', filePath);
+   const __dirname = import.meta.dirname;   
+   filePath = path.join(__dirname, filePath);
    fs.unlink(filePath, err => console.log(err));
 }
