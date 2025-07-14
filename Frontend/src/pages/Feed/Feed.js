@@ -137,29 +137,57 @@ class Feed extends Component {
     formData.append('content', postData.content);
     formData.append('image', postData.image);
     
-    let url = 'http://localhost:8080/feed/post';
-    let method = 'POST';
+    let graphqlQuery = {
+      query: `
+        mutation CreatePost($postInput: PostInputData!) {
+          createPost(postInput: $postInput) {
+            _id
+            title
+            content
+            imageUrl
+            creator {
+              name
+            }
+            createdAt
+          }
+        }
+      `,
+      variables: {
+        postInput: {
+          title: postData.title,
+          content: postData.content,
+          imageUrl: 'png.jpg.jpeg',
+        }
+      }
+    };    
 
-    if (this.state.editPost) {
-      const postId = this.state.editPost._id;
-      url = `http://localhost:8080/feed/post/${postId}`;
-      method = 'PUT';
-    }
-
-    fetch(url, {
-      method: method,
-      body: formData,
+    fetch('http://localhost:8080/graphql', {
+      method: 'POST',
+      body: JSON.stringify(graphqlQuery),
       headers: {
         'Authorization': 'Bearer ' + this.props.token,
+        'Content-Type': 'application/json'
       }
-    }).then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Creating or editing a post failed!');
-        }
+    }).then(res => {        
         return res.json();
       })
       .then(resData => {
-        console.log(resData);        
+        if (resData.erros && resData.errors[0].status === 422) {
+          throw new Error(
+            "Invalid input"
+          );
+        }
+        if (resData.erros && resData.errors[0].status === 401) {
+          throw new Error(
+            "Not authenticated"
+          );
+        }
+        if (resData.erros) {
+          throw new Error(
+            "Post creation failed!"
+          );
+        }
+        console.log(resData);                
         this.setState(prevState => {          
           return {
             isEditing: false,

@@ -7,6 +7,7 @@ import cors from 'cors';
 import { createHandler } from "graphql-http/lib/use/express";
 import graphqlSchema from './graphql/schema.js';
 import graphqlResolver from './graphql/resolvers.js';
+import { auth } from './middleware/auth-middleware.js';
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
@@ -51,6 +52,8 @@ app.use(cors({
    //* Specifies which headers can be used in the actual request
    allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use(auth);
 
 app.use('/graphql', createHandler({
    schema: graphqlSchema,

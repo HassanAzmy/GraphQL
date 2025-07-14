@@ -5,7 +5,7 @@ export default buildSchema(`
       _id: ID!
       title: String!
       content: String!
-      imageURL: String!
+      imageUrl: String!
       creator: User!
       createdAt: String!
       updatedAt: String!
@@ -29,14 +29,21 @@ export default buildSchema(`
       email: String!
       name: String!
       password: String!
-   } 
+   }
    
+   input PostInputData{
+      title: String!
+      content: String!
+      imageUrl: String!
+   }
+
    type Query {
-      hello: String
+      hello: String!
    }
 
    type Mutation {
-      createUser(userInput: UserInputData): User
-      login(email: String!, password: String!): AuthData
-   }  
+      createUser(userInput: UserInputData!): User!
+      login(email: String!, password: String!): AuthData!
+      createPost(postInput: PostInputData!): Post!
+   }
 `);
