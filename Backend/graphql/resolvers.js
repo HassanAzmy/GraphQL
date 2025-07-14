@@ -108,7 +108,6 @@ export default {
          error.code = 422;
          throw error;
       }
-      console.log('zzzzzzzzzzz');
       
       const user = await User.findById(userId);
       if(!user) {
@@ -121,7 +120,7 @@ export default {
          title,
          content,
          imageUrl,
-         creator: userId
+         creator: user
       });
       const createdPost = await post.save();
       
@@ -134,6 +133,33 @@ export default {
          _id: createdPost._id.toString(),
          createdAt: createdPost.createdAt.toISOString(),
          updatedAt: createdPost.updatedAt.toISOString(),
+      }
+   },
+
+   showPosts: async function(args, context) {
+      const { isAuth } = context;
+
+      if (!isAuth) {
+         const err = new Error('Not Authenticated');
+         err.status = 401;
+         throw err;
+      }
+      
+      const totalPosts = await Post.find().countDocuments();
+      const posts = await Post.find()
+         .sort({createdAt: -1})
+         .populate('creator');
+      
+      return {
+         posts: posts.map(p => {
+            return {
+               ...p._doc,
+               _id: p._id.toString(),
+               createdAt: p.createdAt.toISOString(),
+               updatedAt: p.updatedAt.toISOString(),
+            }
+         }),
+         totalPosts
       }
    }
 }
