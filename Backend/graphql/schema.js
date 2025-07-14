@@ -44,6 +44,7 @@ export default buildSchema(`
 
    type Query {
       showPosts(page: Int!): PostData!
+      showSinglePost(postId: ID!): Post!
    }
 
    type Mutation {

@@ -81,10 +81,10 @@ export default {
       }
    },
 
-   createPost: async function ({ postInput }, context) {   
+   createPost: async function ({ postInput }, context) {         
       const { userId } = context;
-      const { isAuth } = context;       
-
+      const { isAuth } = context;
+      
       if(!isAuth) {
          const err = new Error('Not Authenticated');
          err.status = 401;
@@ -138,9 +138,8 @@ export default {
       }
    },
 
-   showPosts: async function(args, context) {
+   showPosts: async function ({ page }, context) {
       const { req } = context;
-      console.log(req);
       
       const { isAuth } = context;
       if (!isAuth) {
@@ -149,7 +148,6 @@ export default {
          throw err;
       }
       
-      const page = req.raw.query.page;
       const totalPosts = await Post.find().countDocuments();
       const posts = await Post.find()
          .sort({createdAt: -1})
@@ -168,5 +166,29 @@ export default {
          }),
          totalPosts
       }
-   }
+   },
+
+   showSinglePost: async function ({ postId }, context) {
+      const { isAuth } = context;
+      
+      if (!isAuth) {
+         const err = new Error('Not Authenticated');
+         err.status = 401;
+         throw err;
+      }
+
+      const post = await Post.findById(postId).populate('creator');
+      if(!post) {
+         const err = new Error('No post found');
+         err.status = 404;
+         throw err;
+      }
+
+      return {
+         ...post._doc,
+         _id: post._id.toString(),
+         createdAt: post.createdAt.toString(),
+         updatedAt: post.updatedAt.toString(),
+      }
+   },
 }

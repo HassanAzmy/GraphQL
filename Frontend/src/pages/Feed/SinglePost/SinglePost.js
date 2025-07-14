@@ -13,12 +13,34 @@ class SinglePost extends Component {
   };
 
   componentDidMount() {
-    const postId = this.props.match.params.postId;
-    fetch(`http://localhost:8080/feed/post/${postId}`, {
-      method: 'GET',
+    const postId = this.props.match.params.postId;    
+
+    const graphqlQuery = {
+      query: `
+        query ShowSinglePost($postId: ID!) {
+          showSinglePost(postId: $postId) {
+            title
+            content
+            imageUrl
+            createdAt
+            creator {
+              name
+            }
+          }
+        }
+      `,
+      variables: {
+        postId
+      }
+    }
+
+    fetch(`http://localhost:8080/graphql`, {
+      method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + this.props.token,
-      }
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(graphqlQuery)
     })
       .then(res => {
         console.log(res);        
@@ -31,11 +53,11 @@ class SinglePost extends Component {
         console.log('---------------------------------------');
         console.log(resData);        
         this.setState({
-          title: resData.post.title,
-          author: resData.post.creator.name,
-          image: 'http://localhost:8080/' + resData.post.imageUrl,
-          date: new Date(resData.post.createdAt).toLocaleDateString('en-US'),
-          content: resData.post.content
+          title: resData.data.showSinglePost.title,
+          author: resData.data.showSinglePost.creator.name,
+          image: 'http://localhost:8080/' + resData.data.showSinglePost.imageUrl,
+          date: new Date(resData.data.showSinglePost.createdAt).toLocaleDateString('en-US'),
+          content: resData.data.showSinglePost.content
         });
       })
       .catch(err => {
