@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import multer from "multer";
 import path from 'path';
 import cors from 'cors';
-import { graphqlHTTP } from "express-graphql";
+import { createHandler } from "graphql-http/lib/use/express";
 import graphqlSchema from './graphql/schema.js';
 import graphqlResolver from './graphql/resolvers.js';
 
@@ -52,10 +52,9 @@ app.use(cors({
    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use('/graphql', graphqlHTTP({
+app.use('/graphql', createHandler({
    schema: graphqlSchema,
-   rootValue: graphqlResolver,
-   graphiql: true
+   rootValue: graphqlResolver
 }));
 
 app.use((error, req, res, next) => {
