@@ -26,11 +26,16 @@ export default buildSchema(`
       password: String!
    } 
    
-   type Query {
+   type RootQuery {
       hello: String
    }
 
-   type Mutation {
+   type RootMutation {
       createUser(userInput: UserInputData): User
    }
+
+   schema {
+      query: RootQuery
+      mutation: RootMutation
+   }   
 `);
