@@ -2,7 +2,7 @@ import { buildSchema } from "graphql";
 
 export default buildSchema(`
    type Post {
-      _id: ID
+      _id: ID!
       title: String!
       content: String!
       imageURL: String!
@@ -26,11 +26,11 @@ export default buildSchema(`
       password: String!
    } 
    
-   type RootMutation {
-      createUser(userInput: UserInputData): User
+   type Query {
+      hello: String
    }
 
-   schema {
-      mutation: RootMutation
-   }   
+   type Mutation {
+      createUser(userInput: UserInputData): User
+   }
 `);
