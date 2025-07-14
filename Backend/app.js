@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import mongoose from "mongoose";
 import multer from "multer";
 import path from 'path';
+import fs from 'fs';
 import cors from 'cors';
 import { createHandler } from "graphql-http/lib/use/express";
 import graphqlSchema from './graphql/schema.js';
@@ -55,6 +56,27 @@ app.use(cors({
 
 app.use(auth);
 
+app.put('/post-image', (req, res, next) => {      
+   if(!req.isAuth) {
+      throw new Error('Not authenticated!');
+   }
+   
+   if(!req.file) {
+      return res.status(200).json({
+         message: 'No file provided!'
+      });
+   }
+   
+   if(req.body.oldPath) {
+      clearImage(req.body.oldPath);
+   }
+      
+   return res.status(201).json({
+      message: 'File stored!',
+      imagePath: req.file.path.replace(/\\/g, "/"),
+   });
+})
+
 app.use('/graphql', createHandler({
    schema: graphqlSchema,
    rootValue: graphqlResolver,
@@ -92,3 +114,9 @@ app.use((error, req, res, next) => {
 
 await mongoose.connect(MONGODB_URI);
 app.listen(PORT);
+
+function clearImage(filePath) {
+   const __dirname = import.meta.dirname;
+   filePath = path.join(__dirname, '..', filePath);
+   fs.unlink(filePath, err => console.log(err));
+}
