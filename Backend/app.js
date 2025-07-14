@@ -4,7 +4,9 @@ import mongoose from "mongoose";
 import multer from "multer";
 import path from 'path';
 import cors from 'cors';
-import { socket } from './socket.js';
+import { graphqlHTTP } from "express-graphql";
+import graphqlSchema from './graphql/schema.js';
+import graphqlResolver from './graphql/resolvers.js';
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
@@ -48,6 +50,11 @@ app.use(cors({
 
    //* Specifies which headers can be used in the actual request
    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use('/graphql', graphqlHTTP({
+   schema: graphqlSchema,
+   rootValue: graphqlResolver
 }));
 
 app.use((error, req, res, next) => {
