@@ -18,7 +18,8 @@ class Feed extends Component {
     status: '',
     postPage: 1,
     postsLoading: true,
-    editLoading: false
+    editLoading: false,
+    postsPerPage: 2,
   };
 
   componentDidMount() {
@@ -119,7 +120,7 @@ class Feed extends Component {
               imagePath: post.imageUrl
             };
           }),
-          totalPosts: resData.data.showPosts.totalItems,
+          totalPosts: resData.data.showPosts.totalPosts,
           postsLoading: false
         });
       })
@@ -299,20 +300,25 @@ class Feed extends Component {
 
       this.setState(prevState => {
         let updatedPosts = [...prevState.posts];
+        let updatedTotalPosts = prevState.totalPosts;
         if (prevState.editPost) {
           const postIndex = prevState.posts.findIndex(
             p => p._id === prevState.editPost._id
           );
           updatedPosts[postIndex] = post;
         } else {
-          updatedPosts.pop();
+          updatedTotalPosts++;
+          if (prevState.posts.length >= 2) {
+            updatedPosts.pop();
+          }
           updatedPosts.unshift(post);
         }
         return {
           posts: updatedPosts,
           isEditing: false,
           editPost: null,
-          editLoading: false
+          editLoading: false,
+          totalPosts: updatedTotalPosts
         };
       });
     })
@@ -438,7 +444,7 @@ class Feed extends Component {
             <Paginator
               onPrevious={this.loadPosts.bind(this, 'previous')}
               onNext={this.loadPosts.bind(this, 'next')}
-              lastPage={Math.ceil(this.state.totalPosts / 2)}
+              lastPage={Math.ceil(this.state.totalPosts / this.state.postsPerPage)}
               currentPage={this.state.postPage}
             >
               {this.state.posts.map(post => (

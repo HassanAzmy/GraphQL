@@ -9,7 +9,7 @@ import { createHandler } from "graphql-http/lib/use/express";
 import graphqlSchema from './graphql/schema.js';
 import graphqlResolver from './graphql/resolvers.js';
 import { auth } from './middleware/auth-middleware.js';
-import { clearImage } from '../util/file.js';
+import { clearImage } from './util/file.js';
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
