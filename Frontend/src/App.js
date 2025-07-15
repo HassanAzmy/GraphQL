@@ -86,11 +86,6 @@ class App extends Component {
         return res.json();
       })
       .then(resData => {
-        if (resData.erros && resData.errors[0].status === 401) {
-          throw new Error(
-            "Not authenticated"
-          );
-        }
         if (resData.erros) {
           throw new Error(
             "User login failed!"

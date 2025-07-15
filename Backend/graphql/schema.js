@@ -45,6 +45,7 @@ export default buildSchema(`
    type Query {
       showPosts(page: Int!): PostData!
       showSinglePost(postId: ID!): Post!
+      user: User!
    }
 
    type Mutation {
@@ -53,5 +54,6 @@ export default buildSchema(`
       createPost(postInput: PostInputData!): Post!
       updatePost(postInput: PostInputData!, postId: ID!): Post!
       deletePost(postId: ID!): Boolean!
+      updateStatus(status: String!): User!
    }
 `);

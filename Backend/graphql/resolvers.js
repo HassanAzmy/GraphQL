@@ -91,7 +91,7 @@ export default {
          err.status = 401;
          throw err;
       }
-
+      
       const { title } = postInput;
       const { content } = postInput;
       const { imageUrl } = postInput;
@@ -280,5 +280,63 @@ export default {
       const res = await Post.findByIdAndDelete(postId);
       
       return true;
+   },
+
+   user: async function(args, context) {
+      const { userId } = context;
+      const { isAuth } = context;
+      if (!isAuth) {
+         const err = new Error('Not Authenticated');
+         err.status = 401;
+         throw err;
+      }
+
+      const user = await User.findById(userId);
+      if(!user) {
+         const err = new Error('User not found');
+         err.status = 404;
+         throw err;
+      }
+
+      return {
+         ...user._doc,
+         _id: user._id.toString()
+      };
+   },
+
+   updateStatus: async function ({ status }, context) {
+      const { userId } = context;
+      const { isAuth } = context;
+      if (!isAuth) {
+         const err = new Error('Not Authenticated');
+         err.status = 401;
+         throw err;
+      }
+
+      const errors = [];
+      if (validator.isEmpty(status) || !validator.isLength(status, { min: 5 })) {
+         errors.push({ message: 'Invalid status' });
+      }
+
+      if (errors.length > 0) {
+         const error = new Error('Invalid input.');
+         error.data = errors;
+         error.code = 422;
+         throw error;
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+         const err = new Error('User not found');
+         err.status = 404;
+         throw err;
+      }
+
+      user.status = status;
+      await user.save();
+      return {
+         ...user._doc,
+         _id: user._id.toString()
+      };
    },
 }

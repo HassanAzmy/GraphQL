@@ -22,20 +22,34 @@ class Feed extends Component {
   };
 
   componentDidMount() {
-    fetch('http://localhost:8080/feed/status', {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Bearer ' + this.props.token
-      }
-    })
-      .then(res => {
-        if (res.status !== 200) {
-          throw new Error('Failed to fetch user status.');
+    const graphqlQuery = {
+      query: `
+        query {
+          user {
+            status
+          }
         }
+      `,
+    };
+
+    fetch('http://localhost:8080/graphql', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + this.props.token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(graphqlQuery)
+    })
+      .then(res => {        
         return res.json();
       })
       .then(resData => {
-        this.setState({ status: resData.status });
+        if (resData.erros) {
+          throw new Error(
+            "Fetching status failed!"
+          );
+        }
+        this.setState({ status: resData.data.user.status });
       })
       .catch(this.catchError);
 
@@ -114,20 +128,29 @@ class Feed extends Component {
 
   statusUpdateHandler = event => {
     event.preventDefault();
-    fetch('http://localhost:8080/feed/status', {
-      method: 'PUT',
+
+    const graphqlQuery = {
+      query: `
+        mutation UpdateStatus($status: String!) {
+          updateStatus(status: $status) {
+            status
+          }
+        }
+      `,
+      variables: {
+        status: this.state.status
+      }
+    };
+
+    fetch('http://localhost:8080/graphql', {
+      method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + this.props.token,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        status: this.state.status
-      })
+      body: JSON.stringify(graphqlQuery)
     })
-      .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error("Can't update status!");
-        }
+      .then(res => {        
         return res.json();
       })
       .then(resData => {
@@ -170,13 +193,14 @@ class Feed extends Component {
     fetch('http://localhost:8080/post-image', {
       method: 'PUT',
       headers: {
-        'Authorization': 'Bearer ' + this.props.token,
-        'Content-Type': 'application/json'
+        'Authorization': 'Bearer ' + this.props.token
       },
       body: formData
     })
     .then(res => res.json())
     .then(resData => {
+      console.log(resData);
+      
       const imageUrl = resData.imagePath || this.state.editPost.imagePath;
       
       let graphqlQuery = {
@@ -234,11 +258,11 @@ class Feed extends Component {
        
       return fetch('http://localhost:8080/graphql', {
         method: 'POST',
-        body: JSON.stringify(graphqlQuery),
         headers: {
           'Authorization': 'Bearer ' + this.props.token,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify(graphqlQuery),
       });
     })
     .then(res => res.json())
