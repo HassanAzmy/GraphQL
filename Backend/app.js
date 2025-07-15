@@ -9,6 +9,7 @@ import { createHandler } from "graphql-http/lib/use/express";
 import graphqlSchema from './graphql/schema.js';
 import graphqlResolver from './graphql/resolvers.js';
 import { auth } from './middleware/auth-middleware.js';
+import { clearImage } from '../util/file.js';
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
@@ -114,9 +115,3 @@ app.use((error, req, res, next) => {
 
 await mongoose.connect(MONGODB_URI);
 app.listen(PORT);
-
-function clearImage(filePath) {
-   const __dirname = import.meta.dirname;   
-   filePath = path.join(__dirname, filePath);
-   fs.unlink(filePath, err => console.log(err));
-}

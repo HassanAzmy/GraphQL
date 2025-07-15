@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { hash, compare } from 'bcryptjs';
 import User from '../models/user-model.js';
 import Post from '../models/post-model.js';
+import {clearImage} from '../util/file.js';
 
 const POSTS_PER_PAGE = 2;
 
@@ -247,5 +248,37 @@ export default {
          createdAt: updatedPost.createdAt.toISOString(),
          updatedAt: updatedPost.updatedAt.toISOString(),
       }
-   }
+   },
+
+   deletePost: async function ({ postId }, context) {
+      const { userId } = context;
+      const { isAuth } = context;
+      if (!isAuth) {
+         const err = new Error('Not Authenticated');
+         err.status = 401;
+         throw err;
+      }
+
+      const post = await Post.findById(postId);
+      if (!post) {
+         const err = new Error('No post found');
+         err.status = 404;
+         throw err;
+      }
+
+      if (post.creator.toString() !== userId.toString()) {
+         const err = new Error('Not Authorized');
+         err.status = 403;
+         throw err;
+      }
+      
+      const user = await User.findById(userId);      
+      user.posts.pull(postId);
+      await user.save();
+
+      clearImage(post.imageUrl);
+      const res = await Post.findByIdAndDelete(postId);
+      
+      return true;
+   },
 }

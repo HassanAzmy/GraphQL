@@ -170,7 +170,8 @@ class Feed extends Component {
     fetch('http://localhost:8080/post-image', {
       method: 'PUT',
       headers: {
-        'Authorization': 'Bearer ' + this.props.token
+        'Authorization': 'Bearer ' + this.props.token,
+        'Content-Type': 'application/json'
       },
       body: formData
     })
@@ -308,20 +309,52 @@ class Feed extends Component {
 
   deletePostHandler = postId => {
     this.setState({ postsLoading: true });
-    fetch(`http://localhost:8080/feed/post/${postId}`, {
-      method: 'DELETE',
+
+    const graphqlQuery = {
+      query: `
+            mutation DeletePost($postId: ID!) {
+              deletePost(postId: $postId)
+            }
+          `,
+      variables: {        
+        postId
+      }
+    };
+    console.log('zzzzzzzzzzz');
+    
+    fetch(`http://localhost:8080/graphql`, {
+      method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + this.props.token,
-      }
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(graphqlQuery)
     })
-      .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Deleting a post failed!');
-        }
+      .then(res => {        
         return res.json();
       })
       .then(resData => {
         console.log(resData);
+        if (resData.erros && resData.errors[0].status === 403) {
+          throw new Error(
+            "Not Authorized"
+          );
+        }
+        if (resData.erros && resData.errors[0].status === 401) {
+          throw new Error(
+            "Not authenticated"
+          );
+        }
+        if (resData.erros && resData.errors[0].status === 404) {
+          throw new Error(
+            "No post found"
+          );
+        }
+        if (resData.erros) {
+          throw new Error(
+            "Post Deletion failed!"
+          );
+        }
         this.loadPosts();
       })
       .catch(err => {
